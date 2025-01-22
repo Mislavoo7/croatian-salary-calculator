@@ -73,11 +73,11 @@
 
        01 LowLevelSalary PIC 9(3)V99 VALUE 700.00.
        01 MidLevelSalary PIC 9(4)V99 VALUE 1300.00.
-       01 MidLevelBreaking PIC 9(4)V99 VALUE 1022.00.
        01 MidLevelSalarySplit PIC 9(4)v99 VALUE 1022.00.
 
        01 TaxationBaseInEuro PIC 9(7)V99.
-       01 PersonalDeductionInEuro PIC 9(7)V99.
+       01 PersonalDeduction PIC 9(7)V99.
+       01 Income PIC 9(7)V99.
        01 CityLowTaxInEuro PIC 9(7)V99.
        01 CityHighTaxInEuro PIC 9(7)V99.
        01 IncomeTaxInEuro PIC 9(7)V99.
@@ -247,9 +247,11 @@
            ADD FirstPillarInEuro, SecondPillarInEuro TO 
            TotalPillarInEuro
 
-           COMPUTE PersonalDeductionInEuro = GrossSalary -
+           COMPUTE Income = GrossSalary -
            TotalPillarInEuro
          ELSE
+           COMPUTE PersonalDeduction = 600 * TotalAllowances
+
            IF GrossSalary <= MidLevelSalary
       *> up to 700 up to 1300 is calculated using the given formula 0.5*(1300-gross). This difference is subtracted from the gross and multiplied by 15%
              COMPUTE FirstPillarInEuro = (GrossSalary - 
@@ -258,26 +260,24 @@
              ADD FirstPillarInEuro, SecondPillarInEuro TO 
              TotalPillarInEuro
 
-      *> TODO bug sumewhere here
-      *> No clue why 1022 - came up with that number empirically
-             IF GrossSalary <= MidLevelBreaking
-               SUBTRACT TotalPillarInEuro FROM GrossSalary GIVING
-               PersonalDeductionInEuro
-             ELSE
-               MULTIPLY MinSalary BY TotalAllowances GIVING 
-               PersonalDeductionInEuro
-             END-IF 
+             COMPUTE Income = GrossSalary - 
+             TotalPillarInEuro
            ELSE
-      *> TODO this part is not done yet
-             DISPLAY "High"
+      *> more then 1300 euro
+             COMPUTE FirstPillarInEuro = GrossSalary * FirstPillar
+
+             ADD FirstPillarInEuro, SecondPillarInEuro TO 
+             TotalPillarInEuro
+
+             COMPUTE Income = GrossSalary - 
+             TotalPillarInEuro
            END-IF
          END-IF
 
-         IF PersonalDeductionInEuro <= 0
+         IF Income <= PersonalDeduction
            MOVE 0 TO TaxationBaseInEuro
          ELSE
-           COMPUTE TaxationBaseInEuro = GrossSalary - 
-           TotalPillarInEuro - PersonalDeductionInEuro
+           COMPUTE TaxationBaseInEuro = Income - PersonalDeduction 
          END-IF
 
          IF TaxationBaseInEuro < CityTaxBreakingPoint
@@ -285,6 +285,8 @@
            SelectedCityLowTax
            MOVE 0 TO CityHighTaxInEuro
            MOVE CityLowTaxInEuro TO IncomeTaxInEuro 
+
+           COMPUTE NetSalary = Income - IncomeTaxInEuro
          ELSE
            COMPUTE CityLowTaxInEuro = CityTaxBreakingPoint * 
            SelectedCityLowTax 
@@ -293,20 +295,20 @@
            CityTaxBreakingPoint) * SelectedCityHighTax 
 
            ADD CityLowTaxInEuro, CityHighTaxInEuro TO IncomeTaxInEuro 
+
+           COMPUTE NetSalary = Income - IncomeTaxInEuro
          END-IF
            
         COMPUTE HealthInsuranceInEuro = GrossSalary *
            HealthInsurancePercent
         COMPUTE EmployerToPayInEuro = GrossSalary + 
-           HealthInsuranceInEuro
-        COMPUTE NetSalary = TaxationBaseInEuro - IncomeTaxInEuro + 
-           personalDeductionInEuro.
+           HealthInsuranceInEuro.
         
        DisplayCalculations.
         DISPLAY "Gross " GrossSalary.
         DISPLAY "First pension pillar: " FirstPillarInEuro.
         DISPLAY "Second pension pillar: " SecondPillarInEuro.
-        DISPLAY "Personal deduction: " PersonalDeductionInEuro.
+        DISPLAY "Income: " Income.
         DISPLAY "Taxation base: " TaxationBaseInEuro.
         DISPLAY "Low city tax: " CityLowTaxInEuro.
         DISPLAY "High city tax: " CityHighTaxInEuro.
