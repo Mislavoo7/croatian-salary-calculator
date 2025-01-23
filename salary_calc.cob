@@ -83,14 +83,18 @@
        01 IncomeTaxInEuro PIC 9(7)V99.
        01 EmployerToPayInEuro PIC 9(7)V99.
        01 NetSalary PIC 9(7)V99 VALUE 0.
+       
+       01 NetOrGross PIC X VALUE "1".
+          88 BrutToNet VALUE "1". 
+          88 NetToBrut VALUE "2". 
+
        PROCEDURE DIVISION.
          PERFORM ReadAllCities.
          PERFORM ChooseCity.
          PERFORM ChooseAllowances.
          PERFORM ReadAllowances.
-         PERFORM GrossToNet.
+         PERFORM ChooseCalculation.
          PERFORM DisplayCalculations.
-
            
          STOP RUN.
 
@@ -157,8 +161,10 @@
          ACCEPT DependentsNum.
          
          DISPLAY "Are you disabled?" 
-         DISPLAY "('n' for no, 'p' for partially, 't' for total)? "
-         WITH NO ADVANCING.
+         DISPLAY " 'n' for no," 
+         DISPLAY " 'p' for partially or" 
+         DISPLAY " 't' for total disability"
+         DISPLAY "Enter: " WITH NO ADVANCING
          ACCEPT DisabilityStatus.
 
        ReadAllowances.
@@ -236,6 +242,21 @@
          TotalDependentsAllowance + DisabilityAllowance
          DISPLAY "Total Allowances is                      " 
          TotalAllowances.
+
+       ChooseCalculation.
+         DISPLAY "-------------------------"
+         DISPLAY "WHAT ARE YOU CALCULATING?"
+         DISPLAY " Enter 1 if Brut to Net."
+         DISPLAY " Enter 2 if Net to Brut."
+         DISPLAY "Enter: " WITH NO ADVANCING
+         ACCEPT NetOrGross. 
+         IF BrutToNet 
+           PERFORM GrossToNet
+         END-IF
+
+         IF NetToBrut
+           PERFORM NetToGross
+         END-IF.
          
        GrossToNet.
          DISPLAY "Enter your gross salary: " WITH NO ADVANCING
@@ -303,7 +324,11 @@
            HealthInsurancePercent
         COMPUTE EmployerToPayInEuro = GrossSalary + 
            HealthInsuranceInEuro.
-        
+
+       NetToGross.
+         DISPLAY "Enter your net salary: " WITH NO ADVANCING
+         ACCEPT GrossSalary.
+
        DisplayCalculations.
         DISPLAY "Gross " GrossSalary.
         DISPLAY "First pension pillar: " FirstPillarInEuro.
