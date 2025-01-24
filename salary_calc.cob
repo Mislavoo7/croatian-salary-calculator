@@ -18,6 +18,9 @@
          ASSIGN TO "allowances.dat"
          ORGANIZATION IS LINE SEQUENTIAL.
 
+         SELECT SALARY-FILE ASSIGN TO "salary.txt"
+         ORGANIZATION IS LINE SEQUENTIAL.
+
        DATA DIVISION.
        FILE SECTION.
        FD  CITY-TAX-FILE.
@@ -30,6 +33,9 @@
        01 Allowances.
          02 AllowanceValue PIC 9V9.
          02 AllowanceLabel PIC X(20).
+
+       FD SALARY-FILE.
+       01 PrinLine PIC X(50).
 
        WORKING-STORAGE SECTION.
        01 GrossSalary PIC 9(7)V99.
@@ -94,6 +100,24 @@
        01 HighTaxInPercent PIC 9(2)V99.
        01 ClassCheck PIC 9(7)V99.
 
+       01 MakeReportFile PIC X.
+          88 MakeReport VALUE "y".
+       01 StayOpen PIC X VALUE "y".
+
+       01 GrossSalaryF  PIC Z(7).99.
+       01 FirstPillarInEuroF  PIC Z(7).99.
+       01 SecondPillarInEuroF  PIC Z(7).99.
+       01 IncomeF  PIC Z(7).99.
+       01 TotalAllowancesF  PIC Z(2).99.
+       01 PersonalDeductionF  PIC Z(7).99.
+       01 TaxationBaseInEuroF  PIC Z(7).99.
+       01 CityLowTaxInEuroF  PIC Z(7).99.
+       01 CityHighTaxInEuroF  PIC Z(7).99.
+       01 IncomeTaxInEuroF  PIC Z(7).99.
+       01 HealthInsuranceInEuroF  PIC Z(7).99.
+       01 NetSalaryF  PIC Z(7).99.
+       01 EmployerToPayInEuroF  PIC Z(7).99.
+
        PROCEDURE DIVISION.
          PERFORM ReadAllCities.
          PERFORM ChooseCity.
@@ -101,6 +125,7 @@
          PERFORM ReadAllowances.
          PERFORM ChooseCalculation.
          PERFORM DisplayCalculations.
+         PERFORM RunReportMaker.
            
          STOP RUN.
 
@@ -387,23 +412,115 @@
           PERFORM GrossToNet.
 
        DisplayCalculations.
+           MOVE GrossSalary TO GrossSalaryF.  
+           MOVE FirstPillarInEuro TO FirstPillarInEuroF.  
+           MOVE SecondPillarInEuro TO SecondPillarInEuroF.  
+           MOVE Income TO IncomeF.  
+           MOVE TotalAllowances TO TotalAllowancesF.  
+           MOVE PersonalDeduction TO PersonalDeductionF.  
+      *> For some reason TaxationBaseInEuroF shows 4 decimmal spacs TODO
+           MOVE TaxationBaseInEuro TO TaxationBaseInEuroF.
+           MOVE CityLowTaxInEuro TO CityLowTaxInEuroF.  
+           MOVE CityHighTaxInEuro TO CityHighTaxInEuroF.  
+           MOVE IncomeTaxInEuro TO IncomeTaxInEuroF.  
+           MOVE HealthInsuranceInEuro TO HealthInsuranceInEuroF.  
+           MOVE NetSalary TO NetSalaryF.  
+           MOVE EmployerToPayInEuro TO EmployerToPayInEuroF.  
+
            DISPLAY " "
            DISPLAY "Salary Calculation Report in €"
            DISPLAY "======================="
-           DISPLAY "Gross Salary:          " GrossSalary
+           DISPLAY "Gross Salary:          " GrossSalaryF
            DISPLAY "Pension Contributions:"
-           DISPLAY "  First Pillar:        " FirstPillarInEuro
-           DISPLAY "  Second Pillar:       " SecondPillarInEuro
-           DISPLAY "Taxable Income:        " Income
-           DISPLAY "Allowance  600 * " TotalAllowances "  " 
-           PersonalDeduction
-           DISPLAY "Taxation Base:         " TaxationBaseInEuro
+           DISPLAY "  First Pillar:        " FirstPillarInEuroF
+           DISPLAY "  Second Pillar:       " SecondPillarInEuroF
+           DISPLAY "Taxable Income:        " IncomeF
+           DISPLAY "Allowance  600 * " TotalAllowancesF " " 
+           PersonalDeductionF
+           DISPLAY "Taxation Base:         " TaxationBaseInEuroF
            DISPLAY "City Taxes:"
-           DISPLAY "  Low City Tax:        " CityLowTaxInEuro
-           DISPLAY "  High City Tax:       " CityHighTaxInEuro
-           DISPLAY "Total Income Tax:      " IncomeTaxInEuro
-           DISPLAY "Health Insurance:      " HealthInsuranceInEuro
-           DISPLAY "Net Salary:            " NetSalary
-           DISPLAY "Employer's Cost:       " EmployerToPayInEuro
+           DISPLAY "  Low City Tax:        " CityLowTaxInEuroF
+           DISPLAY "  High City Tax:       " CityHighTaxInEuroF
+           DISPLAY "Total Income Tax:      " IncomeTaxInEuroF
+           DISPLAY "Health Insurance:      " HealthInsuranceInEuroF
+           DISPLAY "Net Salary:            " NetSalaryF
+           DISPLAY "Employer's Cost:       " EmployerToPayInEuroF
            DISPLAY "=======================".
+       
+       RunReportMaker.
+           DISPLAY "Save it to a report? (y/n) " WITH NO ADVANCING
+           ACCEPT MakeReportFile
+           IF MakeReportFile = 'y' 
+             OPEN OUTPUT SALARY-FILE
+             PERFORM WriteToFile
+             CLOSE SALARY-FILE
+             DISPLAY "Saved to salary.txt"
+           END-IF.
+
+       WriteToFile.
+           MOVE "Salary Calculation Report in €" TO PrinLine
+           WRITE PrinLine
+
+           MOVE "=============================" TO PrinLine
+           WRITE PrinLine
+           
+           STRING "Gross Salary:          " GrossSalaryF
+           DELIMITED BY SIZE INTO PrinLine
+           WRITE PrinLine.
+
+           MOVE "Pension Contributions:" TO PrinLine
+           WRITE PrinLine
+
+           STRING "  First Pillar:        " FirstPillarInEuroF
+           DELIMITED BY SIZE INTO PrinLine
+           WRITE PrinLine
+
+           STRING "  Second Pillar:       " SecondPillarInEuroF
+           DELIMITED BY SIZE INTO PrinLine
+           WRITE PrinLine
+
+           STRING "Taxable Income:        " IncomeF
+           DELIMITED BY SIZE INTO PrinLine
+           WRITE PrinLine
+
+           STRING "Allowance  600 * " TotalAllowancesF " " 
+           PersonalDeductionF
+           DELIMITED BY SIZE INTO PrinLine
+           WRITE PrinLine
+
+           STRING "Taxation Base:       " TaxationBaseInEuroF
+           DELIMITED BY SIZE INTO PrinLine
+           WRITE PrinLine
+
+           MOVE "City Taxes:" TO PrinLine
+           WRITE PrinLine
+
+           STRING "  Low City Tax:        " CityLowTaxInEuroF
+           DELIMITED BY SIZE INTO PrinLine
+           WRITE PrinLine
+
+           STRING "  High City Tax:       " CityHighTaxInEuroF
+           DELIMITED BY SIZE INTO PrinLine
+           WRITE PrinLine
+
+           STRING "Total Income Tax:      " IncomeTaxInEuroF
+           DELIMITED BY SIZE INTO PrinLine
+           WRITE PrinLine
+
+           STRING "Health Insurance:      " HealthInsuranceInEuroF
+           DELIMITED BY SIZE INTO PrinLine
+           WRITE PrinLine
+
+           STRING "Net Salary:            " NetSalaryF
+           DELIMITED BY SIZE INTO PrinLine
+           WRITE PrinLine
+
+           STRING "Employer's Cost:       " EmployerToPayInEuroF
+           DELIMITED BY SIZE INTO PrinLine
+           WRITE PrinLine
+
+           MOVE "=============================" TO PrinLine
+           WRITE PrinLine.
+
+           
 
