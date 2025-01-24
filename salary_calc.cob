@@ -32,7 +32,7 @@
          02 AllowanceLabel PIC X(20).
 
        WORKING-STORAGE SECTION.
-       01 GrossSalary PIC 9(7)V99 VALUE 0.
+       01 GrossSalary PIC 9(7)V99.
        01 MinSalary PIC 9(4)V99 VALUE 970.00.
        01 CityTaxBreakingPoint PIC 9(4)V99 VALUE 5000.00.
        01 CityTaxId PIC 9(3).
@@ -87,6 +87,12 @@
        01 NetOrGross PIC X VALUE "1".
           88 BrutToNet VALUE "1". 
           88 NetToBrut VALUE "2". 
+
+       01 Kpn PIC 9(2)V9(16).
+       01 Kpv PIC 9(2)V9(16).
+       01 LowTaxInPercent PIC 9(2)V99.
+       01 HighTaxInPercent PIC 9(2)V99.
+       01 ClassCheck PIC 9(7)V99.
 
        PROCEDURE DIVISION.
          PERFORM ReadAllCities.
@@ -259,8 +265,11 @@
          END-IF.
          
        GrossToNet.
-         DISPLAY "Enter your gross salary: " WITH NO ADVANCING
-         ACCEPT GrossSalary 
+      *> When I calcualte Net to brut the GrossSalary won't be zero
+         IF GrossSalary = 0
+          DISPLAY "Enter your gross salary: " WITH NO ADVANCING
+          ACCEPT GrossSalary 
+         END-IF
          COMPUTE SecondPillarInEuro = GrossSalary * SecondPillar
          IF GrossSalary <= LowLevelSalary
       *> up to 700 euros, a fixed amount of 300 euros is deducted from the gross and then multiplied by 15%
@@ -327,7 +336,55 @@
 
        NetToGross.
          DISPLAY "Enter your net salary: " WITH NO ADVANCING
-         ACCEPT GrossSalary.
+         ACCEPT NetSalary
+
+         COMPUTE PersonalDeduction = 600 * TotalAllowances
+         COMPUTE LowTaxInPercent = SelectedCityLowTax * 100
+         COMPUTE HighTaxInPercent = SelectedCityHighTax * 100
+         COMPUTE Kpn = (LowTaxInPercent / (100 - LowTaxInPercent)) + 1
+         COMPUTE Kpv = (HighTaxInPercent / (100 - HighTaxInPercent)) + 1
+         COMPUTE ClassCheck = CityTaxBreakingPoint * (1 / Kpn) + 
+         PersonalDeduction
+
+         if NetSalary <= PersonalDeduction
+      *> Smallest net salary
+           MOVE NetSalary TO Income
+
+           PERFORM IncomeToGross
+           DISPLAY "Smallest- " PersonalDeduction
+         END-IF
+
+         IF NetSalary > PersonalDeduction AND NetSalary <= ClassCheck 
+      *> Middle net salary
+           COMPUTE Income = (NetSalary - PersonalDeduction) * Kpn + 
+           PersonalDeduction
+
+           PERFORM IncomeToGross
+         ELSE
+           IF NetSalary > ClassCheck
+      *> High net salary
+             COMPUTE Income = CityTaxBreakingPoint + PersonalDeduction + 
+             (NetSalary - (CityTaxBreakingPoint - CityTaxBreakingPoint * 
+             SelectedCityLowTax + PersonalDeduction)) * Kpv
+             PERFORM IncomeToGross
+           END-IF
+         END-IF.
+
+       IncomeToGross.
+          IF Income <= 285.00
+            COMPUTE GrossSalary = Income / 0.95
+          END-IF
+           
+          IF Income > 285.00 AND Income <= 605.00
+            COMPUTE GrossSalary = (Income - 45.00) / 0.80
+          ELSE
+           IF Income > 605.00 AND Income <= 1040.00
+             COMPUTE GrossSalary = (Income - 97.50) / 0.725
+           ELSE
+             COMPUTE GrossSalary = Income / 0.80
+           END-IF
+          END-IF
+          PERFORM GrossToNet.
 
        DisplayCalculations.
         DISPLAY "Gross " GrossSalary.
