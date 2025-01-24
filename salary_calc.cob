@@ -387,17 +387,23 @@
           PERFORM GrossToNet.
 
        DisplayCalculations.
-        DISPLAY "Gross " GrossSalary.
-        DISPLAY "First pension pillar: " FirstPillarInEuro.
-        DISPLAY "Second pension pillar: " SecondPillarInEuro.
-        DISPLAY "Income: " Income.
-        DISPLAY "Taxation base: " TaxationBaseInEuro.
-        DISPLAY "Low city tax: " CityLowTaxInEuro.
-        DISPLAY "High city tax: " CityHighTaxInEuro.
-        DISPLAY "Total taxes: " IncomeTaxInEuro.
-        DISPLAY "Net: " NetSalary.
-        DISPLAY "----------"
-        DISPLAY "Gross " GrossSalary.
-        DISPLAY "Health insurance: " HealthInsuranceInEuro.
-        DISPLAY "Employers cost: " EmployerToPayInEuro.
+           DISPLAY " "
+           DISPLAY "Salary Calculation Report in €"
+           DISPLAY "======================="
+           DISPLAY "Gross Salary:          " GrossSalary
+           DISPLAY "Pension Contributions:"
+           DISPLAY "  First Pillar:        " FirstPillarInEuro
+           DISPLAY "  Second Pillar:       " SecondPillarInEuro
+           DISPLAY "Taxable Income:        " Income
+           DISPLAY "Allowance  600 * " TotalAllowances "  " 
+           PersonalDeduction
+           DISPLAY "Taxation Base:         " TaxationBaseInEuro
+           DISPLAY "City Taxes:"
+           DISPLAY "  Low City Tax:        " CityLowTaxInEuro
+           DISPLAY "  High City Tax:       " CityHighTaxInEuro
+           DISPLAY "Total Income Tax:      " IncomeTaxInEuro
+           DISPLAY "Health Insurance:      " HealthInsuranceInEuro
+           DISPLAY "Net Salary:            " NetSalary
+           DISPLAY "Employer's Cost:       " EmployerToPayInEuro
+           DISPLAY "=======================".
 
