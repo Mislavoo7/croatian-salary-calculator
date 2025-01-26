@@ -20,7 +20,6 @@
 
          SELECT SALARY-FILE ASSIGN TO "salary.txt"
          ORGANIZATION IS LINE SEQUENTIAL.
-
        DATA DIVISION.
        FILE SECTION.
        FD  CITY-TAX-FILE.
@@ -130,6 +129,7 @@
          STOP RUN.
 
        ReadAllCities.
+      *> Present list of all city taxes - there 500+ cities
          DISPLAY 'List of available cities:'
          DISPLAY '-------------------------'
          OPEN INPUT CITY-TAX-FILE
@@ -149,6 +149,7 @@
         CLOSE CITY-TAX-FILE.
 
        ChooseCity.
+      *> Let user choose his city
            DISPLAY ' '
            DISPLAY 'To see your tax enter the city number: ' 
            WITH NO ADVANCING
@@ -183,6 +184,8 @@
            END-If.
 
        ChooseAllowances.
+      *> Let user enter how many kids he has and other allowances
+      *> so he can pay less taxes 
          DISPLAY " YOUR ALLOWANCES "
          DISPLAY "How many kids do you have? " WITH NO ADVANCING
          ACCEPT KidsNum.
@@ -199,6 +202,7 @@
          ACCEPT DisabilityStatus.
 
        ReadAllowances.
+      *> Present user his allowances
          OPEN INPUT ALLOWANCES-FILE 
           PERFORM UNTIL EndOfAllwancesFile = 'y'
           READ ALLOWANCES-FILE
@@ -275,6 +279,7 @@
          TotalAllowances.
 
        ChooseCalculation.
+      *> Choose brut to net or net to brut
          DISPLAY "-------------------------"
          DISPLAY "WHAT ARE YOU CALCULATING?"
          DISPLAY " Enter 1 if Brut to Net."
@@ -292,7 +297,8 @@
        GrossToNet.
       *> When I calcualte Net to brut the GrossSalary won't be zero
          IF GrossSalary = 0
-          DISPLAY "Enter your gross salary: " WITH NO ADVANCING
+          DISPLAY "Enter your gross salary (use dot, e.g. 1300.05): "
+          WITH NO ADVANCING
           ACCEPT GrossSalary 
          END-IF
          COMPUTE SecondPillarInEuro = GrossSalary * SecondPillar
@@ -360,7 +366,8 @@
            HealthInsuranceInEuro.
 
        NetToGross.
-         DISPLAY "Enter your net salary: " WITH NO ADVANCING
+         DISPLAY "Enter your net salary (use dot, e.g. 1300.05): "
+         WITH NO ADVANCING
          ACCEPT NetSalary
 
          COMPUTE PersonalDeduction = 600 * TotalAllowances
@@ -409,9 +416,12 @@
              COMPUTE GrossSalary = Income / 0.80
            END-IF
           END-IF
+      *> At the ent of NetToBrut only Income and GrossSalary are calculated
+      *> So run GrossToNet to get all the elements
           PERFORM GrossToNet.
 
        DisplayCalculations.
+      *> Display all the elements of the calculation
            MOVE GrossSalary TO GrossSalaryF.  
            MOVE FirstPillarInEuro TO FirstPillarInEuroF.  
            MOVE SecondPillarInEuro TO SecondPillarInEuroF.  
@@ -448,6 +458,7 @@
            DISPLAY "=======================".
        
        RunReportMaker.
+      *> Ask user if he wants to export the calculation
            DISPLAY "Save it to a report? (y/n) " WITH NO ADVANCING
            ACCEPT MakeReportFile
            IF MakeReportFile = 'y' 
@@ -461,7 +472,7 @@
            MOVE "Salary Calculation Report in €" TO PrinLine
            WRITE PrinLine
 
-           MOVE "=============================" TO PrinLine
+           MOVE "=================================" TO PrinLine
            WRITE PrinLine
            
            STRING "Gross Salary:          " GrossSalaryF
@@ -519,7 +530,7 @@
            DELIMITED BY SIZE INTO PrinLine
            WRITE PrinLine
 
-           MOVE "=============================" TO PrinLine
+           MOVE "=================================" TO PrinLine
            WRITE PrinLine.
 
            
