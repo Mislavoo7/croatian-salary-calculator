@@ -24,14 +24,14 @@
        FILE SECTION.
        FD  CITY-TAX-FILE.
        01 CityTax.
-         02 LowTax PIC V9999.
-         02 HighTax PIC V9999.
-         02 CityName PIC X(45).
+         05 LowTax PIC V9999.
+         05 HighTax PIC V9999.
+         05 CityName PIC X(45).
 
        FD  ALLOWANCES-FILE.
        01 Allowances.
-         02 AllowanceValue PIC 9V9.
-         02 AllowanceLabel PIC X(20).
+         05 AllowanceValue PIC 9V9.
+         05 AllowanceLabel PIC X(20).
 
        FD SALARY-FILE.
        01 PrinLine PIC X(50).
@@ -45,36 +45,36 @@
        01 CityTaxHighTaxPercent PIC 9(2)V99.
        01 SelectedLineNumber PIC 9(3).
        01 PensionContributions.
-         02 FirstPillar PIC V99 VALUE 0.15.
-         02 FirstPillarInEuro PIC 9(7)V99.
-         02 SecondPillar PIC V99 VALUE 0.05.
-         02 SecondPillarInEuro PIC 9(7)V99.
-         02 TotalPillarInEuro PIC 9(7)V99.
+         05 FirstPillar PIC V99 VALUE 0.15.
+         05 FirstPillarInEuro PIC 9(7)V99.
+         05 SecondPillar PIC V99 VALUE 0.05.
+         05 SecondPillarInEuro PIC 9(7)V99.
+         05 TotalPillarInEuro PIC 9(7)V99.
        01 HealthInsurance.
-         02 HealthInsurancePercent PIC V999 VALUE 0.165.
-         02 HealthInsuranceInEuro PIC 9(7)V99.
+         05 HealthInsurancePercent PIC V999 VALUE 0.165.
+         05 HealthInsuranceInEuro PIC 9(7)V99.
        01 SelectedCityName PIC X(45). 
        01 SelectedCityLowTax PIC V9999. 
        01 SelectedCityHighTax PIC V9999. 
        01 RunCityListing PIC X VALUE 'Y'.
 
        01 AllowancesCalc.
-         02 PersonalAllowance PIC 9(2)V9 VALUE 1.0.
-         02 TotalAllowances PIC 9(2)V9 VALUE 0.0.
-         02 KidsNum PIC 9(2).
-         02 KidsAllowance PIC 9(2)V9.
-         02 AfterTenthKidValue PIC 9(2)V9.
-         02 RunAllowanceListing PIC 99 VALUE 1.
-         02 AfterTenthKidAllowance PIC 9V9.
-         02 DependentsNum PIC 9(2).
-         02 DependentsAllowance PIC 9(2)V9.
-         02 TotalDependentsAllowance PIC 9(2)V9.
-         02 DisabilityStatus PIC X(1).
-         02 SelectedDisability PIC 9(2)V9 VALUE 0.0.
-         02 PartialDisabilityAllowance PIC 9V9.
-         02 TotalDisabilityAllowance PIC 9V9.
-         02 DisabilityAllowance PIC 9(2)V9 VALUE 0.0.
-         02 EndOfAllwancesFile PIC X VALUE 'n'.
+         05 PersonalAllowance PIC 9(2)V9 VALUE 1.0.
+         05 TotalAllowances PIC 9(2)V9 VALUE 0.0.
+         05 KidsNum PIC 9(2).
+         05 KidsAllowance PIC 9(2)V9.
+         05 AfterTenthKidValue PIC 9(2)V9.
+         05 RunAllowanceListing PIC 99 VALUE 1.
+         05 AfterTenthKidAllowance PIC 9V9.
+         05 DependentsNum PIC 9(2).
+         05 DependentsAllowance PIC 9(2)V9.
+         05 TotalDependentsAllowance PIC 9(2)V9.
+         05 DisabilityStatus PIC X(1).
+         05 SelectedDisability PIC 9(2)V9 VALUE 0.0.
+         05 PartialDisabilityAllowance PIC 9V9.
+         05 TotalDisabilityAllowance PIC 9V9.
+         05 DisabilityAllowance PIC 9(2)V9 VALUE 0.0.
+         05 EndOfAllwancesFile PIC X VALUE 'n'.
 
        01 LowLevelSalary PIC 9(3)V99 VALUE 700.00.
        01 MidLevelSalary PIC 9(4)V99 VALUE 1300.00.
@@ -534,7 +534,6 @@
       *> 2. save city name and tax to array - keep disk i/o to a min 
       *> 3. matter os stly change ____02 to ____05
       *> 4. mv hardcoded num to file so cahn be changed without testing...
-      *> 5. cahnge IF to EVALUATE TRUE
 
            
 
