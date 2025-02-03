@@ -221,23 +221,18 @@
             END-IF
       *> after the tenth kid just get the factor and compute the other
       *kids
-            IF RunAllowanceListing = 11 AND KidsNum > 10 
+         EVALUATE TRUE
+           WHEN RunAllowanceListing = 11 AND KidsNum > 10 
              DISPLAY "- Allowance for each other kids is       +" 
              AllowanceValue
              MOVE AllowanceValue TO AfterTenthKidAllowance 
-            END-IF 
-
-            IF RunAllowanceListing = 12
+           WHEN RunAllowanceListing = 12
              MOVE AllowanceValue TO DependentsAllowance 
-            END-IF 
-
-            IF RunAllowanceListing = 13
+           WHEN RunAllowanceListing = 13
              MOVE AllowanceValue TO PartialDisabilityAllowance 
-            END-IF 
-
-            IF RunAllowanceListing = 14
+           WHEN RunAllowanceListing = 14
              MOVE AllowanceValue TO TotalDisabilityAllowance 
-            END-IF 
+           END-EVALUATE
 
             ADD 1 TO RunAllowanceListing
           END-READ
@@ -265,13 +260,12 @@
          DISPLAY "Total allowance for dependent persons is " 
          TotalDependentsAllowance
            
-         IF DisabilityStatus = "p" 
+         EVALUATE TRUE
+          WHEN DisabilityStatus = "p" 
            MOVE PartialDisabilityAllowance TO DisabilityAllowance
-         END-IF
-
-         IF DisabilityStatus = "t" 
+          WHEN DisabilityStatus = "t" 
            MOVE TotalDisabilityAllowance TO DisabilityAllowance
-         END-IF
+         END-EVALUATE
 
          DISPLAY "Disability allowance is                  " 
          DisabilityAllowance 
@@ -289,13 +283,12 @@
          DISPLAY " Enter 2 if Net to Brut."
          DISPLAY "Enter: " WITH NO ADVANCING
          ACCEPT NetOrGross. 
-         IF BrutToNet 
-           PERFORM 2410-GrossToNet
-         END-IF
-
-         IF NetToBrut
-           PERFORM 2420-NetToGross
-         END-IF.
+         EVALUATE TRUE
+           WHEN BrutToNet 
+            PERFORM 2410-GrossToNet
+           WHEN NetToBrut
+            PERFORM 2420-NetToGross
+         END-EVALUATE.
          
        2410-GrossToNet.
       *> When I calcualte Net to brut the GrossSalary won't be zero
@@ -542,13 +535,6 @@
       *> 3. matter os stly change ____02 to ____05
       *> 4. mv hardcoded num to file so cahn be changed without testing...
       *> 5. cahnge IF to EVALUATE TRUE
-      *> 6. use numbers in par for examp:
-      * PROCEDURE DIVISION.
-      *     PERFORM 1000-MAIN-PROCESS.
-
-      * 1000-MAIN-PROCESS.
-      *     PERFORM 2000-READ-ALL-CITIES.
-      *     PERFORM 2100-CHOOSE-CITY.
 
            
 
