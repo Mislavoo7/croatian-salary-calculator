@@ -118,17 +118,20 @@
        01 EmployerToPayInEuroF  PIC Z(7).99.
 
        PROCEDURE DIVISION.
-         PERFORM ReadAllCities.
-         PERFORM ChooseCity.
-         PERFORM ChooseAllowances.
-         PERFORM ReadAllowances.
-         PERFORM ChooseCalculation.
-         PERFORM DisplayCalculations.
-         PERFORM RunReportMaker.
+           PERFORM 1000-MAIN-PROCESS.
+
+       1000-MAIN-PROCESS.
+         PERFORM 2000-ReadAllCities.
+         PERFORM 2100-ChooseCity.
+         PERFORM 2200-ChooseAllowances.
+         PERFORM 2300-ReadAllowances.
+         PERFORM 2400-ChooseCalculation.
+         PERFORM 2500-DisplayCalculations.
+         PERFORM 2600-RunReportMaker.
            
          STOP RUN.
 
-       ReadAllCities.
+       2000-ReadAllCities.
       *> Present list of all city taxes - there 500+ cities
          DISPLAY 'List of available cities:'
          DISPLAY '-------------------------'
@@ -148,7 +151,7 @@
          END-PERFORM
         CLOSE CITY-TAX-FILE.
 
-       ChooseCity.
+       2100-ChooseCity.
       *> Let user choose his city
            DISPLAY ' '
            DISPLAY 'To see your tax enter the city number: ' 
@@ -180,10 +183,10 @@
             CLOSE CITY-TAX-FILE
            ELSE
              DISPLAY "Invalid line number. Please try again."
-             PERFORM ChooseCity
+             PERFORM 2100-ChooseCity
            END-If.
 
-       ChooseAllowances.
+       2200-ChooseAllowances.
       *> Let user enter how many kids he has and other allowances
       *> so he can pay less taxes 
          DISPLAY " YOUR ALLOWANCES "
@@ -201,7 +204,7 @@
          DISPLAY "Enter: " WITH NO ADVANCING
          ACCEPT DisabilityStatus.
 
-       ReadAllowances.
+       2300-ReadAllowances.
       *> Present user his allowances
          OPEN INPUT ALLOWANCES-FILE 
           PERFORM UNTIL EndOfAllwancesFile = 'y'
@@ -278,7 +281,7 @@
          DISPLAY "Total Allowances is                      " 
          TotalAllowances.
 
-       ChooseCalculation.
+       2400-ChooseCalculation.
       *> Choose brut to net or net to brut
          DISPLAY "-------------------------"
          DISPLAY "WHAT ARE YOU CALCULATING?"
@@ -287,14 +290,14 @@
          DISPLAY "Enter: " WITH NO ADVANCING
          ACCEPT NetOrGross. 
          IF BrutToNet 
-           PERFORM GrossToNet
+           PERFORM 2410-GrossToNet
          END-IF
 
          IF NetToBrut
-           PERFORM NetToGross
+           PERFORM 2420-NetToGross
          END-IF.
          
-       GrossToNet.
+       2410-GrossToNet.
       *> When I calcualte Net to brut the GrossSalary won't be zero
          IF GrossSalary = 0
           DISPLAY "Enter your gross salary (use dot, e.g. 1300.05): "
@@ -365,7 +368,7 @@
         COMPUTE EmployerToPayInEuro = GrossSalary + 
            HealthInsuranceInEuro.
 
-       NetToGross.
+       2420-NetToGross.
          DISPLAY "Enter your net salary (use dot, e.g. 1300.05): "
          WITH NO ADVANCING
          ACCEPT NetSalary
@@ -382,7 +385,7 @@
       *> Smallest net salary
            MOVE NetSalary TO Income
 
-           PERFORM IncomeToGross
+           PERFORM 2421-IncomeToGross
            DISPLAY "Smallest- " PersonalDeduction
          END-IF
 
@@ -391,18 +394,18 @@
            COMPUTE Income = (NetSalary - PersonalDeduction) * Kpn + 
            PersonalDeduction
 
-           PERFORM IncomeToGross
+           PERFORM 2421-IncomeToGross
          ELSE
            IF NetSalary > ClassCheck
       *> High net salary
              COMPUTE Income = CityTaxBreakingPoint + PersonalDeduction + 
              (NetSalary - (CityTaxBreakingPoint - CityTaxBreakingPoint * 
              SelectedCityLowTax + PersonalDeduction)) * Kpv
-             PERFORM IncomeToGross
+             PERFORM 2421-IncomeToGross
            END-IF
          END-IF.
 
-       IncomeToGross.
+       2421-IncomeToGross.
           IF Income <= 285.00
             COMPUTE GrossSalary = Income / 0.95
           END-IF
@@ -418,9 +421,9 @@
           END-IF
       *> At the ent of NetToBrut only Income and GrossSalary are calculated
       *> So run GrossToNet to get all the elements
-          PERFORM GrossToNet.
+          PERFORM 2410-GrossToNet.
 
-       DisplayCalculations.
+       2500-DisplayCalculations.
       *> Display all the elements of the calculation
            MOVE GrossSalary TO GrossSalaryF.  
            MOVE FirstPillarInEuro TO FirstPillarInEuroF.  
@@ -457,18 +460,18 @@
            DISPLAY "Employer's Cost:       " EmployerToPayInEuroF
            DISPLAY "=======================".
        
-       RunReportMaker.
+       2600-RunReportMaker.
       *> Ask user if he wants to export the calculation
            DISPLAY "Save it to a report? (y/n) " WITH NO ADVANCING
            ACCEPT MakeReportFile
            IF MakeReportFile = 'y' 
              OPEN OUTPUT SALARY-FILE
-             PERFORM WriteToFile
+             PERFORM 2610-WriteToFile
              CLOSE SALARY-FILE
              DISPLAY "Saved to salary.txt"
            END-IF.
 
-       WriteToFile.
+       2610-WriteToFile.
            MOVE "Salary Calculation Report in €" TO PrinLine
            WRITE PrinLine
 
@@ -538,7 +541,8 @@
       *> 2. save city name and tax to array - keep disk i/o to a min 
       *> 3. matter os stly change ____02 to ____05
       *> 4. mv hardcoded num to file so cahn be changed without testing...
-      *> 5. use numbers in par for examp:
+      *> 5. cahnge IF to EVALUATE TRUE
+      *> 6. use numbers in par for examp:
       * PROCEDURE DIVISION.
       *     PERFORM 1000-MAIN-PROCESS.
 
