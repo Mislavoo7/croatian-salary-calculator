@@ -533,5 +533,18 @@
            MOVE "=================================" TO PrinLine
            WRITE PrinLine.
 
+      *> TODO fixes:
+      *> 1. include ROUNDED in each COMPUTE - read more about bankers round
+      *> 2. save city name and tax to array - keep disk i/o to a min 
+      *> 3. matter os stly change ____02 to ____05
+      *> 4. mv hardcoded num to file so cahn be changed without testing...
+      *> 5. use numbers in par for examp:
+      * PROCEDURE DIVISION.
+      *     PERFORM 1000-MAIN-PROCESS.
+
+      * 1000-MAIN-PROCESS.
+      *     PERFORM 2000-READ-ALL-CITIES.
+      *     PERFORM 2100-CHOOSE-CITY.
+
            
 
