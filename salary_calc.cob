@@ -40,9 +40,15 @@
        01 GrossSalary PIC 9(7)V99.
        01 MinSalary PIC 9(4)V99 VALUE 970.00.
        01 CityTaxBreakingPoint PIC 9(4)V99 VALUE 5000.00.
-       01 CityTaxId PIC 9(3).
        01 CityTaxLowTaxPercent PIC 9(2)V99.
        01 CityTaxHighTaxPercent PIC 9(2)V99.
+       01 CityTaxes.
+         05 CityTaxTable.
+           10 CityTaxEntry OCCURS 565 TIMES INDEXED BY CityIdx.
+             15 CityTaxLowTax PIC 9(2)V99.
+             15 CityTaxHighTax PIC 9(2)V99.
+             15 CityTaxName  PIC X(60).
+         05 CityTaxesId           PIC 9(3) VALUE 0.
        01 SelectedLineNumber PIC 9(3).
        01 PensionContributions.
          05 FirstPillar PIC V99 VALUE 0.15.
@@ -136,55 +142,48 @@
          DISPLAY 'List of available cities:'
          DISPLAY '-------------------------'
          OPEN INPUT CITY-TAX-FILE
-         MOVE 1 TO CityTaxId
+         MOVE 1 TO CityTaxesId
+
          PERFORM UNTIL RunCityListing = 'N'
           READ CITY-TAX-FILE
             AT END
              MOVE 'N' TO RunCityListing 
             NOT AT END
+             MOVE CityName TO CityTaxName(CityTaxesId)
+             MOVE LowTax TO CityTaxLowTax(CityTaxesId)
+             MOVE HighTax TO CityTaxHighTax(CityTaxesId)
+
              COMPUTE CityTaxLowTaxPercent = LowTax * 100
              COMPUTE CityTaxHighTaxPercent = HighTax * 100
-             DISPLAY CityTaxId " " CityName " " CityTaxLowTaxPercent 
+             DISPLAY CityTaxesId " " CityName " " CityTaxLowTaxPercent 
              "% - " CityTaxHighTaxPercent "%"
-             ADD 1 TO CityTaxId
+             ADD 1 TO CityTaxesId 
             END-READ
          END-PERFORM
         CLOSE CITY-TAX-FILE.
 
        2100-ChooseCity.
       *> Let user choose his city
-           DISPLAY ' '
-           DISPLAY 'To see your tax enter the city number: ' 
-           WITH NO ADVANCING
-           MOVE 'Y' TO RunCityListing
-           ACCEPT SelectedLineNumber 
-           IF SelectedLineNumber > 0 AND SelectedLineNumber < CityTaxId
-            MOVE 1 TO CityTaxId
-            OPEN INPUT CITY-TAX-FILE
-            PERFORM UNTIL RunCityListing = 'N'
-             READ CITY-TAX-FILE
-              AT END
-                MOVE 'N' TO RunCityListing
-              NOT AT END
-                IF CityTaxId = SelectedLineNumber
-                  MOVE LowTax TO SelectedCityLowTax
-                  MOVE HighTax TO SelectedCityHighTax
-                  MOVE CityName TO SelectedCityName
-                  COMPUTE CityTaxLowTaxPercent = LowTax * 100
-                  COMPUTE CityTaxHighTaxPercent = HighTax * 100
-                  DISPLAY " YOU SELECTED: " CityTaxLowTaxPercent"% / " 
-                   CityTaxHighTaxPercent"% " CityName
-                  DISPLAY " -------------------------"
-                  MOVE 'N' TO RunCityListing
-                END-IF
-                ADD 1 TO CityTaxId
-             END-READ
-            END-PERFORM
-            CLOSE CITY-TAX-FILE
-           ELSE
-             DISPLAY "Invalid line number. Please try again."
-             PERFORM 2100-ChooseCity
-           END-If.
+         DISPLAY ' '
+         DISPLAY 'To see your tax enter the city number: ' 
+         WITH NO ADVANCING
+         MOVE 'Y' TO RunCityListing
+         ACCEPT SelectedLineNumber 
+         IF SelectedLineNumber > 0 AND SelectedLineNumber < CityTaxesId
+          MOVE CityTaxName(SelectedLineNumber) TO SelectedCityName
+          MOVE CityTaxHighTax(SelectedLineNumber) TO SelectedCityHighTax
+          MOVE CityTaxLowTax(SelectedLineNumber) TO SelectedCityLowTax
+
+          COMPUTE CityTaxLowTaxPercent = SelectedCityLowTax * 100
+          COMPUTE CityTaxHighTaxPercent = SelectedCityHighTax * 100
+
+          DISPLAY " YOU SELECTED: " CityTaxLowTaxPercent"% / " 
+          CityTaxHighTaxPercent"% " SelectedCityName
+          DISPLAY " -------------------------"
+         ELSE
+           DISPLAY "Invalid line number. Please try again."
+           PERFORM 2100-ChooseCity
+         END-If.
 
        2200-ChooseAllowances.
       *> Let user enter how many kids he has and other allowances
@@ -532,7 +531,6 @@
       *> TODO fixes:
       *> 1. include ROUNDED in each COMPUTE - read more about bankers round
       *> 2. save city name and tax to array - keep disk i/o to a min 
-      *> 3. matter os stly change ____02 to ____05
       *> 4. mv hardcoded num to file so cahn be changed without testing...
 
            
