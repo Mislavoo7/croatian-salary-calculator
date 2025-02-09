@@ -591,8 +591,3 @@
            MOVE "=================================" TO PrinLine
            WRITE PrinLine.
 
-      *> TODO fixes:
-      *> 4. mv hardcoded num to file so cahn be changed without testing...
-
-           
-
