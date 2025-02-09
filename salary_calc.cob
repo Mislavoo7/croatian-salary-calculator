@@ -20,6 +20,10 @@
 
          SELECT SALARY-FILE ASSIGN TO "salary.txt"
          ORGANIZATION IS LINE SEQUENTIAL.
+
+         SELECT CONFIG-FILE
+         ASSIGN TO "config.txt"
+         ORGANIZATION IS LINE SEQUENTIAL.
        DATA DIVISION.
        FILE SECTION.
        FD  CITY-TAX-FILE.
@@ -35,11 +39,17 @@
 
        FD SALARY-FILE.
        01 PrinLine PIC X(50).
+       
+       FD CONFIG-FILE.
+       01 CONFIG-RECORD.
+         05 CONFIG-KEY      PIC X(20).
+         05 CONFIG-VALUE    PIC X(20).
 
        WORKING-STORAGE SECTION.
+       01 ConfigIsOpen PIC A(1).
        01 GrossSalary PIC 9(7)V99.
-       01 MinSalary PIC 9(4)V99 VALUE 970.00.
-       01 CityTaxBreakingPoint PIC 9(4)V99 VALUE 5000.00.
+       01 MinSalary PIC 9(4)V99.
+       01 CityTaxBreakingPoint PIC 9(4)V99.
        01 CityTaxLowTaxPercent PIC 9(2)V99.
        01 CityTaxHighTaxPercent PIC 9(2)V99.
        01 CityTaxes.
@@ -51,13 +61,13 @@
          05 CityTaxesId           PIC 9(3) VALUE 0.
        01 SelectedLineNumber PIC 9(3).
        01 PensionContributions.
-         05 FirstPillar PIC V99 VALUE 0.15.
+         05 FirstPillar PIC 9V99.
          05 FirstPillarInEuro PIC 9(7)V99.
-         05 SecondPillar PIC V99 VALUE 0.05.
+         05 SecondPillar PIC 9V99.
          05 SecondPillarInEuro PIC 9(7)V99.
          05 TotalPillarInEuro PIC 9(7)V99.
        01 HealthInsurance.
-         05 HealthInsurancePercent PIC V999 VALUE 0.165.
+         05 HealthInsurancePercent PIC V999.
          05 HealthInsuranceInEuro PIC 9(7)V99.
        01 SelectedCityName PIC X(45). 
        01 SelectedCityLowTax PIC V9999. 
@@ -65,7 +75,7 @@
        01 RunCityListing PIC X VALUE 'Y'.
 
        01 AllowancesCalc.
-         05 PersonalAllowance PIC 9(2)V9 VALUE 1.0.
+         05 PersonalAllowance PIC 9(2)V9.
          05 TotalAllowances PIC 9(2)V9 VALUE 0.0.
          05 KidsNum PIC 9(2).
          05 KidsAllowance PIC 9(2)V9.
@@ -82,9 +92,9 @@
          05 DisabilityAllowance PIC 9(2)V9 VALUE 0.0.
          05 EndOfAllwancesFile PIC X VALUE 'n'.
 
-       01 LowLevelSalary PIC 9(3)V99 VALUE 700.00.
-       01 MidLevelSalary PIC 9(4)V99 VALUE 1300.00.
-       01 MidLevelSalarySplit PIC 9(4)v99 VALUE 1022.00.
+       01 LowLevelSalary PIC 9(3)V99.
+       01 MidLevelSalary PIC 9(4)V99.
+       01 MidLevelSalarySplit PIC 9(4)v99.
 
        01 TaxationBaseInEuro PIC 9(7)V99.
        01 PersonalDeduction PIC 9(7)V99.
@@ -127,6 +137,7 @@
            PERFORM 1000-MAIN-PROCESS.
 
        1000-MAIN-PROCESS.
+         PERFORM 1100-ReadConfig.
          PERFORM 2000-ReadAllCities.
          PERFORM 2100-ChooseCity.
          PERFORM 2200-ChooseAllowances.
@@ -136,6 +147,46 @@
          PERFORM 2600-RunReportMaker.
            
          STOP RUN.
+
+       1100-ReadConfig.
+         OPEN INPUT CONFIG-FILE.
+         PERFORM UNTIL ConfigIsOpen = 'Y'
+           READ CONFIG-FILE
+             AT END
+                 MOVE 'Y' TO ConfigIsOpen
+             NOT AT END
+               EVALUATE CONFIG-KEY
+                 WHEN 'MINSALARY'
+                   COMPUTE MinSalary = FUNCTION NUMVAL(CONFIG-VALUE)
+                 WHEN 'CITYTAXBREAKINGPOINT'
+                   COMPUTE CityTaxBreakingPoint = FUNCTION
+                   NUMVAL(CONFIG-VALUE)
+                 WHEN 'FIRSTPILLAR'
+                   COMPUTE FirstPillar = FUNCTION NUMVAL(CONFIG-VALUE)
+                 WHEN 'SECONDPILLAR'
+                   COMPUTE SecondPillar = FUNCTION 
+                   NUMVAL(CONFIG-VALUE)
+                 WHEN 'HEALTHINSURANCE'
+                   COMPUTE HealthInsurancePercent = FUNCTION 
+                   NUMVAL(CONFIG-VALUE)
+                 WHEN 'PERSONALALLOWANCE'
+                   COMPUTE PersonalAllowance = FUNCTION
+                   NUMVAL(CONFIG-VALUE)
+                 WHEN 'LOWLEVELSALARY'
+                   COMPUTE LowLevelSalary = FUNCTION
+                   NUMVAL(CONFIG-VALUE)
+                 WHEN 'MIDLEVELSALARY'
+                   COMPUTE MidLevelSalary = FUNCTION
+                   NUMVAL(CONFIG-VALUE)
+                 WHEN 'MIDLEVELSALARYSPLIT'
+                   COMPUTE MidLevelSalarySplit = FUNCTION
+                   NUMVAL(CONFIG-VALUE)
+               END-EVALUATE
+           END-READ
+         END-PERFORM.
+         DISPLAY "fiiiiiiiiiiiiiiiiiirst" FirstPillar
+         CLOSE CONFIG-FILE.
+
 
        2000-ReadAllCities.
       *> Present list of all city taxes - there 500+ cities
@@ -298,6 +349,9 @@
          END-IF
          COMPUTE SecondPillarInEuro ROUNDED = GrossSalary * SecondPillar
          IF GrossSalary <= LowLevelSalary
+      *> hardcoded values are not in the config.txt bc formulas will
+      *> change with the values so I have to recomple the code  
+      
       *> up to 700 euros, a fixed amount of 300 euros is deducted from the gross and then multiplied by 15%
            COMPUTE FirstPillarInEuro ROUNDED = (GrossSalary - 300) * 
            FirstPillar
@@ -363,6 +417,8 @@
            HealthInsuranceInEuro.
 
        2420-NetToGross.
+      *> hardcoded values are not in the config.txt bc formulas will
+      *> change with the values so I have to recomple the code  
          DISPLAY "Enter your net salary (use dot, e.g. 1300.05): "
          WITH NO ADVANCING
          ACCEPT NetSalary
@@ -403,6 +459,8 @@
          END-IF.
 
        2421-IncomeToGross.
+      *> hardcoded values are not in the config.txt bc formulas and
+      *> classes will change with the values so I have to recomple the code  
           IF Income <= 285.00
             COMPUTE GrossSalary ROUNDED = Income / 0.95
           END-IF
@@ -534,7 +592,6 @@
            WRITE PrinLine.
 
       *> TODO fixes:
-      *> 1. include ROUNDED in each COMPUTE - read more about bankers round
       *> 4. mv hardcoded num to file so cahn be changed without testing...
 
            
