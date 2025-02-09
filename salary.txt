@@ -1,17 +1,17 @@
 Salary Calculation Report in €
 =================================
-Gross Salary:             1300.00
+Gross Salary:             9114.29
 Pension Contributions:
-  First Pillar:            195.00
-  Second Pillar:            65.00
-Taxable Income:           1040.00
+  First Pillar:           1367.14
+  Second Pillar:           455.71
+Taxable Income:           7291.44
 Allowance  600 *  2.20    1320.00
-Taxation Base:              .0000
+Taxation Base:          5971.4400
 City Taxes:
-  Low City Tax:               .00
-  High City Tax:              .00
-Total Income Tax:             .00
-Health Insurance:          214.50
-Net Salary:               1040.00
-Employer's Cost:          1514.50
+  Low City Tax:           1000.00
+  High City Tax:           291.43
+Total Income Tax:         1291.43
+Health Insurance:         1503.86
+Net Salary:               6000.01
+Employer's Cost:         10618.15
 =================================

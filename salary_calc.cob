@@ -296,21 +296,22 @@
           WITH NO ADVANCING
           ACCEPT GrossSalary 
          END-IF
-         COMPUTE SecondPillarInEuro = GrossSalary * SecondPillar
+         COMPUTE SecondPillarInEuro ROUNDED = GrossSalary * SecondPillar
          IF GrossSalary <= LowLevelSalary
       *> up to 700 euros, a fixed amount of 300 euros is deducted from the gross and then multiplied by 15%
-           COMPUTE FirstPillarInEuro = (GrossSalary - 300) * FirstPillar
+           COMPUTE FirstPillarInEuro ROUNDED = (GrossSalary - 300) * 
+           FirstPillar
            ADD FirstPillarInEuro, SecondPillarInEuro TO 
            TotalPillarInEuro
 
-           COMPUTE Income = GrossSalary -
+           COMPUTE Income ROUNDED = GrossSalary -
            TotalPillarInEuro
          ELSE
-           COMPUTE PersonalDeduction = 600 * TotalAllowances
+           COMPUTE PersonalDeduction ROUNDED = 600 * TotalAllowances
 
            IF GrossSalary <= MidLevelSalary
       *> up to 700 up to 1300 is calculated using the given formula 0.5*(1300-gross). This difference is subtracted from the gross and multiplied by 15%
-             COMPUTE FirstPillarInEuro = (GrossSalary - 
+             COMPUTE FirstPillarInEuro ROUNDED = (GrossSalary - 
              0.5 * (MidLevelSalary - GrossSalary) ) * firstPillar
 
              ADD FirstPillarInEuro, SecondPillarInEuro TO 
@@ -320,7 +321,8 @@
              TotalPillarInEuro
            ELSE
       *> more then 1300 euro
-             COMPUTE FirstPillarInEuro = GrossSalary * FirstPillar
+             COMPUTE FirstPillarInEuro ROUNDED = GrossSalary * 
+             FirstPillar
 
              ADD FirstPillarInEuro, SecondPillarInEuro TO 
              TotalPillarInEuro
@@ -337,17 +339,17 @@
          END-IF
 
          IF TaxationBaseInEuro < CityTaxBreakingPoint
-           COMPUTE CityLowTaxInEuro = TaxationBaseInEuro * 
+           COMPUTE CityLowTaxInEuro ROUNDED = TaxationBaseInEuro * 
            SelectedCityLowTax
            MOVE 0 TO CityHighTaxInEuro
            MOVE CityLowTaxInEuro TO IncomeTaxInEuro 
 
            COMPUTE NetSalary = Income - IncomeTaxInEuro
          ELSE
-           COMPUTE CityLowTaxInEuro = CityTaxBreakingPoint * 
+           COMPUTE CityLowTaxInEuro ROUNDED = CityTaxBreakingPoint * 
            SelectedCityLowTax 
 
-           COMPUTE CityHighTaxInEuro = (TaxationBaseInEuro - 
+           COMPUTE CityHighTaxInEuro ROUNDED = (TaxationBaseInEuro - 
            CityTaxBreakingPoint) * SelectedCityHighTax 
 
            ADD CityLowTaxInEuro, CityHighTaxInEuro TO IncomeTaxInEuro 
@@ -355,7 +357,7 @@
            COMPUTE NetSalary = Income - IncomeTaxInEuro
          END-IF
            
-        COMPUTE HealthInsuranceInEuro = GrossSalary *
+        COMPUTE HealthInsuranceInEuro ROUNDED = GrossSalary *
            HealthInsurancePercent
         COMPUTE EmployerToPayInEuro = GrossSalary + 
            HealthInsuranceInEuro.
@@ -365,12 +367,14 @@
          WITH NO ADVANCING
          ACCEPT NetSalary
 
-         COMPUTE PersonalDeduction = 600 * TotalAllowances
+         COMPUTE PersonalDeduction ROUNDED = 600 * TotalAllowances
          COMPUTE LowTaxInPercent = SelectedCityLowTax * 100
          COMPUTE HighTaxInPercent = SelectedCityHighTax * 100
-         COMPUTE Kpn = (LowTaxInPercent / (100 - LowTaxInPercent)) + 1
-         COMPUTE Kpv = (HighTaxInPercent / (100 - HighTaxInPercent)) + 1
-         COMPUTE ClassCheck = CityTaxBreakingPoint * (1 / Kpn) + 
+         COMPUTE Kpn ROuNDED = (LowTaxInPercent / 
+         (100 - LowTaxInPercent)) + 1
+         COMPUTE Kpv ROUNDED = (HighTaxInPercent / 
+         (100 - HighTaxInPercent)) + 1
+         COMPUTE ClassCheck ROUNDED = CityTaxBreakingPoint * (1 / Kpn) + 
          PersonalDeduction
 
          if NetSalary <= PersonalDeduction
@@ -383,14 +387,15 @@
 
          IF NetSalary > PersonalDeduction AND NetSalary <= ClassCheck 
       *> Middle net salary
-           COMPUTE Income = (NetSalary - PersonalDeduction) * Kpn + 
-           PersonalDeduction
+           COMPUTE Income ROUNDED = (NetSalary - PersonalDeduction) * 
+           Kpn + PersonalDeduction
 
            PERFORM 2421-IncomeToGross
          ELSE
            IF NetSalary > ClassCheck
       *> High net salary
-             COMPUTE Income = CityTaxBreakingPoint + PersonalDeduction + 
+             COMPUTE Income ROUNDED = CityTaxBreakingPoint + 
+             PersonalDeduction + 
              (NetSalary - (CityTaxBreakingPoint - CityTaxBreakingPoint * 
              SelectedCityLowTax + PersonalDeduction)) * Kpv
              PERFORM 2421-IncomeToGross
@@ -399,16 +404,16 @@
 
        2421-IncomeToGross.
           IF Income <= 285.00
-            COMPUTE GrossSalary = Income / 0.95
+            COMPUTE GrossSalary ROUNDED = Income / 0.95
           END-IF
            
           IF Income > 285.00 AND Income <= 605.00
-            COMPUTE GrossSalary = (Income - 45.00) / 0.80
+            COMPUTE GrossSalary ROUNDED = (Income - 45.00) / 0.80
           ELSE
            IF Income > 605.00 AND Income <= 1040.00
-             COMPUTE GrossSalary = (Income - 97.50) / 0.725
+             COMPUTE GrossSalary ROUNDED = (Income - 97.50) / 0.725
            ELSE
-             COMPUTE GrossSalary = Income / 0.80
+             COMPUTE GrossSalary ROUNDED = Income / 0.80
            END-IF
           END-IF
       *> At the ent of NetToBrut only Income and GrossSalary are calculated
@@ -530,7 +535,6 @@
 
       *> TODO fixes:
       *> 1. include ROUNDED in each COMPUTE - read more about bankers round
-      *> 2. save city name and tax to array - keep disk i/o to a min 
       *> 4. mv hardcoded num to file so cahn be changed without testing...
 
            
